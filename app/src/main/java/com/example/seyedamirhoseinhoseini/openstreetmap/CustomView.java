@@ -14,14 +14,14 @@ import android.widget.RelativeLayout;
 public class CustomView extends LinearLayout {
 
 
-    public CustomView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
+   public CustomView(Context context, AttributeSet attrs) {
+      super(context, attrs);
+   }
 
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        onTouchEvent(ev);
-        Log.d("touch","PARENT.onInterceptTouchEvent");
-        return true;
-    }
+   @Override
+   public boolean onInterceptTouchEvent(MotionEvent ev) {
+      onTouchEvent(ev);
+      Log.d("touch", "PARENT.onInterceptTouchEvent");
+      return true;
+   }
 }

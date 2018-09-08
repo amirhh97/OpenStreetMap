@@ -21,51 +21,51 @@ import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow;
 
 public class MyInfoWindow extends MarkerInfoWindow {
 
-    /**
-     * @param layoutResId layout that must contain these ids: bubble_title,bubble_description,
-     * bubble_subdescription, bubble_image
-     * @param mapView
-     */
-    MapView mapView;
-    TextView title;
-    TextView description;
-    ImageView img;
-    Marker marker;
+   /**
+    * @param layoutResId layout that must contain these ids: bubble_title,bubble_description,
+    * bubble_subdescription, bubble_image
+    * @param mapView
+    */
+   MapView mapView;
+   TextView title;
+   TextView description;
+   ImageView img;
+   Marker marker;
 
-    public MyInfoWindow(int layoutResId, MapView mapView, final Marker marker) {
-        super(layoutResId, mapView);
-        this.mapView = mapView;
-        this.marker = marker;
-        title = mView.findViewById(R.id.bubble_title);
-        description = mView.findViewById(R.id.bubble_description);
-        img = mView.findViewById(R.id.bubble_image);
-        mView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN)
-                    Log.i("msg", "Click");
-                marker.getInfoWindow().close();
-                return true;
-            }
-        });
+   public MyInfoWindow(int layoutResId, MapView mapView, final Marker marker) {
+      super(layoutResId, mapView);
+      this.mapView = mapView;
+      this.marker = marker;
+      title = mView.findViewById(R.id.bubble_title);
+      description = mView.findViewById(R.id.bubble_description);
+      img = mView.findViewById(R.id.bubble_image);
+      mView.setOnTouchListener(new View.OnTouchListener() {
+         @Override
+         public boolean onTouch(View v, MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN)
+               Log.i("msg", "Click");
+            marker.getInfoWindow().close();
+            return true;
+         }
+      });
 
 
-    }
+   }
 
-    @Override
-    public Marker getMarkerReference() {
-        return super.getMarkerReference();
-    }
+   @Override
+   public Marker getMarkerReference() {
+      return super.getMarkerReference();
+   }
 
-    @Override
-    public void onOpen(Object item) {
-        title.setText(marker.getTitle());
-        description.setText(marker.getSnippet());
-        // img.setImageDrawable(marker.getImage());
-    }
+   @Override
+   public void onOpen(Object item) {
+      title.setText(marker.getTitle());
+      description.setText(marker.getSnippet());
+      // img.setImageDrawable(marker.getImage());
+   }
 
-    @Override
-    public void onClose() {
-        super.onClose();
-    }
+   @Override
+   public void onClose() {
+      super.onClose();
+   }
 }
