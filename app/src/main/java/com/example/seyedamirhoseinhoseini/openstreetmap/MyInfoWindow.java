@@ -43,7 +43,6 @@ public class MyInfoWindow extends MarkerInfoWindow {
          @Override
          public boolean onTouch(View v, MotionEvent event) {
             if (event.getAction() == MotionEvent.ACTION_DOWN)
-               Log.i("msg", "Click");
             marker.getInfoWindow().close();
             return true;
          }

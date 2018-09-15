@@ -165,7 +165,7 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
          InfoWindow.closeAllInfoWindowsOn(mapView);
          marker.showInfoWindow();
       }
-      Log.d("marker","Click");
+      Log.d("marker", "Click");
       return true;
    }
 
@@ -197,7 +197,10 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
 
    @Override
    public boolean onZoom(ZoomEvent event) {
-      return false;
+      InfoWindow.closeAllInfoWindowsOn(map);
+      return true;
+
+
    }
 
 

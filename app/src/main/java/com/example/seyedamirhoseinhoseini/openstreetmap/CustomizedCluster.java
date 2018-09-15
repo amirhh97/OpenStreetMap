@@ -2,9 +2,12 @@ package com.example.seyedamirhoseinhoseini.openstreetmap;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.util.Log;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -21,24 +24,24 @@ import org.osmdroid.views.overlay.Marker;
 import java.util.ArrayList;
 
 public class CustomizedCluster extends RadiusMarkerClusterer {
-
    public CustomizedCluster(Context ctx) {
       super(ctx);
    }
 
    ClickListener mClickListener;
 
+
    @Override
    public boolean onSingleTapConfirmed(MotionEvent event, MapView mapView) {
+      Canvas c = new Canvas();
       boolean touched = hitTest(event, mapView, this);
-      if (event.getAction() == MotionEvent.ACTION_DOWN) {
-         if (touched) {
+      if (touched && mapView.getZoomLevel() < 16) {
+         if (event.getAction() == MotionEvent.ACTION_DOWN)
             return mClickListener.OnCLusterCLickListener(mapView.getProjection().fromPixels((int) event.getX(), (int) event.getY()));
-         }
-         return super.onSingleTapConfirmed(event, mapView);
       }
       return super.onSingleTapConfirmed(event, mapView);
    }
+
 
    private boolean hitTest(final MotionEvent event, final org.osmdroid.views.MapView mapView, RadiusMarkerClusterer cluster) {
       Point mPositionPixels = new Point();
@@ -47,7 +50,7 @@ public class CustomizedCluster extends RadiusMarkerClusterer {
       final Rect screenRect = mapView.getIntrinsicScreenRect(null);
       int x = -mPositionPixels.x + screenRect.left + (int) event.getX();
       int y = -mPositionPixels.y + screenRect.top + (int) event.getY();
-      return cluster != null && cluster.getBounds().contains(x, y);
+      return cluster.getBounds().contains(x, y);
    }
 
    public void setOnClickListener(ClickListener listner) {
@@ -56,5 +59,8 @@ public class CustomizedCluster extends RadiusMarkerClusterer {
 
    interface ClickListener {
       boolean OnCLusterCLickListener(IGeoPoint point);
+
    }
+
+
 }
