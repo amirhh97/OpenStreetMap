@@ -6,8 +6,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Handler;
 import android.provider.Settings;
@@ -22,40 +25,48 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
 
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer;
+import org.osmdroid.bonuspack.clustering.StaticCluster;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.events.MapListener;
 import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.util.GeoPoint;
+import org.osmdroid.util.PointL;
+import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.FolderOverlay;
 import org.osmdroid.views.overlay.MapEventsOverlay;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay;
 import org.osmdroid.views.overlay.infowindow.InfoWindow;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
+import java.util.EventListener;
+import java.util.Map;
 
 public class MapView extends AppCompatActivity implements Marker.OnMarkerClickListener, MapListener, MapEventsReceiver {
    org.osmdroid.views.MapView map;
    IMapController mapController;
    ArrayList<Marker> markers;
    boolean permissions = false;
+   MyLocationNewOverlay locationMarker;
 
    @Override
    protected void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
-      SharedPreferences pref=getApplicationContext().getSharedPreferences("map", MODE_PRIVATE);
-      Configuration.getInstance().load(getApplicationContext(),pref);
+      SharedPreferences pref = getApplicationContext().getSharedPreferences("map", MODE_PRIVATE);
+      Configuration.getInstance().load(getApplicationContext(), pref);
       setContentView(R.layout.activity_map_view);
       map = findViewById(R.id.map);
       map.getController().setZoom(15);
-      map.getController().animateTo(new GeoPoint(pref.getFloat("long",51),pref.getFloat("alt",37)));
+      map.getController().animateTo(new GeoPoint(Double.valueOf(pref.getString("lat", "35")), Double.valueOf(pref.getString("long", "51"))));
       checkPermission();
       if (!checkGpsState())
          showGpsAlertDialog();
@@ -114,13 +125,15 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
       map.getOverlays().add(marker);
       map.invalidate();
    }
+
    public void initCurrentLocation() {
       if (permissions) {
          GpsMyLocationProvider provider = new GpsMyLocationProvider(this);
          provider.addLocationSource(LocationManager.NETWORK_PROVIDER);
          provider.addLocationSource(LocationManager.GPS_PROVIDER);
+         provider.setLocationUpdateMinTime(5000);
          provider.getLastKnownLocation();
-         final MyLocationNewOverlay locationMarker = new MyLocationNewOverlay(provider, map);
+         locationMarker = new MyLocationNewOverlay(provider, map);
          locationMarker.enableMyLocation();
          locationMarker.enableFollowLocation();
          locationMarker.runOnFirstFix(new Runnable() {
@@ -128,9 +141,9 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
             public void run() {
                mapController.setZoom(15);
                mapController.setCenter(locationMarker.getMyLocation());
-               SharedPreferences pref= getApplicationContext().getSharedPreferences("map",MODE_PRIVATE);
-               pref.edit().putFloat("long", (float) locationMarker.getMyLocation().getLongitude()).apply();
-               pref.edit().putFloat("alt", (float) locationMarker.getMyLocation().getAltitude()).apply();
+               SharedPreferences pref = getApplicationContext().getSharedPreferences("map", MODE_PRIVATE);
+               pref.edit().putString("long", String.valueOf(locationMarker.getMyLocation().getLongitude())).apply();
+               pref.edit().putString("lat", String.valueOf(locationMarker.getMyLocation().getLatitude())).apply();
             }
          });
          map.getOverlays().add(locationMarker);
@@ -142,6 +155,7 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
       rotaiotn.setEnabled(true);
       map.setMultiTouchControls(true);
       map.getOverlays().add(rotaiotn);
+
    }
 
    @Override
@@ -151,11 +165,20 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
          InfoWindow.closeAllInfoWindowsOn(mapView);
          marker.showInfoWindow();
       }
+      Log.d("marker","Click");
       return true;
    }
 
-   public void addCluster(ArrayList<Marker> markers) {
-      RadiusMarkerClusterer cluster = new RadiusMarkerClusterer(this);
+   public void addCluster(final ArrayList<Marker> markers) {
+      CustomizedCluster cluster = new CustomizedCluster(this);
+      cluster.setOnClickListener(new CustomizedCluster.ClickListener() {
+         @Override
+         public boolean OnCLusterCLickListener(IGeoPoint point) {
+            mapController.animateTo(point, 18d, 5000L);
+            return true;
+         }
+
+      });
       cluster.setMaxClusteringZoomLevel(16);
       BitmapDrawable bitmapDrawable = ((BitmapDrawable) ContextCompat.getDrawable(this, R.drawable.marker_cluster));
       cluster.setIcon(bitmapDrawable.getBitmap());
@@ -196,6 +219,26 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
          this.permissions = true;
          initCurrentLocation();
       }
+
+   }
+
+
+   @Override
+   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+      super.onActivityResult(requestCode, resultCode, data);
+      initCurrentLocation();
+   }
+
+   @Override
+   protected void onResume() {
+      super.onResume();
+      locationMarker.enableMyLocation();
+   }
+
+   @Override
+   protected void onPause() {
+      super.onPause();
+      locationMarker.disableMyLocation();
    }
 
    @Override
@@ -206,12 +249,5 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
    @Override
    public boolean longPressHelper(GeoPoint p) {
       return false;
-   }
-
-   @Override
-   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-      super.onActivityResult(requestCode, resultCode, data);
-      Log.d("resultCode", resultCode + "");
-      initCurrentLocation();
    }
 }
