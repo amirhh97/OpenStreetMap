@@ -33,11 +33,10 @@ public class CustomizedCluster extends RadiusMarkerClusterer {
 
    @Override
    public boolean onSingleTapConfirmed(MotionEvent event, MapView mapView) {
-      Canvas c = new Canvas();
       boolean touched = hitTest(event, mapView, this);
-      if (touched && mapView.getZoomLevel() < 16) {
+      if (touched && mapView.getZoomLevel() < 17) {
          if (event.getAction() == MotionEvent.ACTION_DOWN)
-            return mClickListener.OnCLusterCLickListener(mapView.getProjection().fromPixels((int) event.getX(), (int) event.getY()));
+            return mClickListener.OnCLusterCLickListener(this.clusterer(mapView).get(0).getPosition());
       }
       return super.onSingleTapConfirmed(event, mapView);
    }
@@ -53,8 +52,8 @@ public class CustomizedCluster extends RadiusMarkerClusterer {
       return cluster.getBounds().contains(x, y);
    }
 
-   public void setOnClickListener(ClickListener listner) {
-      this.mClickListener = listner;
+   public void setOnClickListener(ClickListener listener) {
+      this.mClickListener = listener;
    }
 
    interface ClickListener {

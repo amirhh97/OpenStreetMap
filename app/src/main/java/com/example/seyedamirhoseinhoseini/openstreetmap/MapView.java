@@ -35,6 +35,7 @@ import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.events.MapListener;
 import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
+import org.osmdroid.tileprovider.constants.OpenStreetMapTileProviderConstants;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.util.PointL;
 import org.osmdroid.views.Projection;
@@ -42,6 +43,7 @@ import org.osmdroid.views.overlay.FolderOverlay;
 import org.osmdroid.views.overlay.MapEventsOverlay;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Overlay;
+import org.osmdroid.views.overlay.compass.CompassOverlay;
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay;
 import org.osmdroid.views.overlay.infowindow.InfoWindow;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
@@ -57,6 +59,7 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
    ArrayList<Marker> markers;
    boolean permissions = false;
    MyLocationNewOverlay locationMarker;
+   int overlaySize;
 
    @Override
    protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +68,7 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
       Configuration.getInstance().load(getApplicationContext(), pref);
       setContentView(R.layout.activity_map_view);
       map = findViewById(R.id.map);
+      map.setMinZoomLevel(13D);
       map.getController().setZoom(15);
       map.getController().animateTo(new GeoPoint(Double.valueOf(pref.getString("lat", "35")), Double.valueOf(pref.getString("long", "51"))));
       checkPermission();
@@ -76,12 +80,13 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
       mapController = map.getController();
       map.addMapListener(this);
       initRotationGesture();
+      // initCompass();
       markers = new ArrayList<>();
       for (double i = 0; i < 0.001; i += 0.0001) {
-         markers.add(addMarkerForCluster(35.72, 51.41 + i));
+         markers.add(createMarker(35.72, 51.41 + i));
       }
       addCluster(markers);
-      MapEventsOverlay mapEventsOverlay = new MapEventsOverlay(this, this);
+      MapEventsOverlay mapEventsOverlay = new MapEventsOverlay(this);
       map.getOverlays().add(mapEventsOverlay);
 
    }
@@ -93,6 +98,7 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
 
    public void showGpsAlertDialog() {
       AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setTitle("location service");
       builder.setMessage("برنامه نیاز به Location شما دارد آیا مایل به فعال کردن آن هستید؟")
               .setNegativeButton("خیر", new DialogInterface.OnClickListener() {
                  @Override
@@ -108,11 +114,11 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
 
    }
 
-   public Marker addMarkerForCluster(double alt, double lng) {
+   public Marker createMarker(double lat, double lng) {
       map.setFocusableInTouchMode(true);
       Marker marker = new Marker(map);
       marker.setOnMarkerClickListener(this);
-      marker.setPosition(new GeoPoint(alt, lng));
+      marker.setPosition(new GeoPoint(lat, lng));
       marker.setTitle("title");
       marker.setSnippet("description");
       //marker.setIcon(ContextCompat.getDrawable(this,R.mipmap.ic_arrow_foreground));
@@ -139,8 +145,12 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
          locationMarker.runOnFirstFix(new Runnable() {
             @Override
             public void run() {
-               mapController.setZoom(15);
-               mapController.setCenter(locationMarker.getMyLocation());
+              runOnUiThread(new Runnable() {
+                 @Override
+                 public void run() {
+                    mapController.setCenter(locationMarker.getMyLocation());
+                 }
+              });
                SharedPreferences pref = getApplicationContext().getSharedPreferences("map", MODE_PRIVATE);
                pref.edit().putString("long", String.valueOf(locationMarker.getMyLocation().getLongitude())).apply();
                pref.edit().putString("lat", String.valueOf(locationMarker.getMyLocation().getLatitude())).apply();
@@ -174,7 +184,7 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
       cluster.setOnClickListener(new CustomizedCluster.ClickListener() {
          @Override
          public boolean OnCLusterCLickListener(IGeoPoint point) {
-            mapController.animateTo(point, 18d, 5000L);
+            mapController.animateTo(point, 18d, 4000L);
             return true;
          }
 
@@ -253,4 +263,12 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
    public boolean longPressHelper(GeoPoint p) {
       return false;
    }
+
+   public void initCompass() {
+      CompassOverlay compass = new CompassOverlay(this, map);
+      compass.enableCompass();
+      map.getOverlays().add(compass);
+
+   }
+
 }

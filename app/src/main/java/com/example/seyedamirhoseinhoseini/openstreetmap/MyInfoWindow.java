@@ -15,6 +15,8 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow;
 
+import java.lang.ref.WeakReference;
+
 /**
  * Created by SeyedAmirhoseinHoseini on 8/28/18.
  */
