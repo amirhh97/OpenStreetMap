@@ -108,6 +108,7 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
         }
         map.getOverlays().add(folder);
 
+
     }
 
     @Override
