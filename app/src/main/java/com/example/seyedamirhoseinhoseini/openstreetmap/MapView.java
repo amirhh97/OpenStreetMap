@@ -199,6 +199,8 @@ public class MapView extends AppCompatActivity implements Marker.OnMarkerClickLi
    }
 
 
+    }
+
    @Override
    public boolean onScroll(ScrollEvent event) {
       InfoWindow.closeAllInfoWindowsOn(map);
